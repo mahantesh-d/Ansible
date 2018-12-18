@@ -1,0 +1,42 @@
+- hosts: SHARD-2
+  remote_user: root
+  vars:
+    myvariable: false
+  tasks:
+  - name: Checking for ansible-4
+    set_fact: 
+        myvariable: rs1-p
+    when: inventory_hostname == 'ansible-4'
+  - name: Checking for ansible-5
+    set_fact: 
+        myvariable: rs2-s
+    when: inventory_hostname == 'ansible-5'
+  - name: Checking for ansible-6
+    set_fact: 
+        myvariable: rs3-s
+    when: inventory_hostname == 'ansible-6'    
+  - name: default
+    set_fact: 
+        myvariable: "{{inventory_hostname}}"
+    when: "not myvariable"
+  - debug: var=myvariable
+  - name: Generating the Config file for mongo
+    copy:
+       dest: /opt/config/config.config
+       content: |
+          systemLog:
+              destination: file
+              path: "/opt/logs/`hostname`.log"
+              logRotate: "rename"
+          storage:
+              journal:
+                  enabled: true
+              dbPath: "/opt/data/{{ myvariable }}"
+          replication:
+              replSetName: "rs2"
+          sharding:
+              clusterRole: "shardsvr"
+          processManagement:
+              fork: true
+          net:
+              port: 27019

@@ -1,0 +1,28 @@
+- hosts: ALL-SERVERS
+  remote_user: root
+  tasks:
+  - name: Creating Directories for mongoDB
+    command: "mkdir {{ item }}"
+    with_items:
+       - /opt/mongoDB
+       - /opt/config
+       - /opt/clusterkey
+  - name: Copying the Mongo binary tar
+    copy:
+       src: /tmp/mongodb-linux-x86_64-3.4.10.tgz
+       dest: /opt/mongoDB
+       owner: root
+  - name: Extract mongodb-linux-x86_64-3.4.10.tgz
+    unarchive:
+       src: /opt/mongoDB/mongodb-linux-x86_64-3.4.10.tgz
+       dest: /opt/mongoDB
+  - name: Rename mongodb-linux-x86_64-3.4.10 to mongo
+    command: mv /opt/mongoDB/mongodb-linux-x86_64-3.4.10 /opt/mongoDB/mongo
+  - name: Moving the cluster key to all the servers
+    copy:
+       src: /tmp/cluster.key
+       dest: /opt/clusterkey
+       owner: root
+       mode: 0400
+- include: shard_1.yaml
+- include: shard_2.yaml 
